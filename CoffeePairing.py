@@ -6,7 +6,6 @@ import os
 
 # path to the CSV files with participant data
 participants_csv = "Coffee Partner Lottery participants.csv"
-
 # header names in the CSV file (name and e-mail of participants)
 header_name = "Your name:"
 header_email = "Your e-mail:"
