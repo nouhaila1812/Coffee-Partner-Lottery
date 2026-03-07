@@ -8,9 +8,13 @@ The link to the google form is https://forms.gle/NRS5GVcTEuB94Zuz7
 all_groups_json = "all_coffee_partners.json"
 time_format = "%Y-%m-%d %H:%M:%S"
 
-
-
 def load_all_partners():
+    """
+    The all_partners dictionary is stored in a json file, it contains an entry for each participant
+    the participants email is their key, and the peoples emails theyve been grouped with before are
+    the values (in a list). This dictionary also saves the last time groups were created so we know
+    which entries are new and which are old.
+    """
     if os.path.exists(all_groups_json):
         with open(all_groups_json) as f:
             all_partners = json.load(f)
@@ -75,6 +79,6 @@ def build_all_groups_json(chosen_size_list, all_partners):
 if __name__ == "__main__":
     all_partners = load_all_partners()
     chosen_size_dict = google_sheet_to_dict()
-    chosen_size_list = make_groups(chosen_size_dict)
+    chosen_size_list = make_groups(chosen_size_dict, all_partners)
     build_all_groups_json(chosen_size_list, all_partners)
 
