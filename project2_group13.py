@@ -1,11 +1,22 @@
 import pandas as pd
 import datetime
 import os
+import json
 """
 The link to the google form is https://forms.gle/NRS5GVcTEuB94Zuz7
 """
-all_groups_csv = "all_coffee_partners.csv"
+all_groups_json = "all_coffee_partners.json"
 time_format = "%Y-%m-%d %H:%M:%S"
+
+
+
+def load_all_partners():
+    if os.path.exists(all_groups_json):
+        with open(all_groups_json) as f:
+            all_partners = json.load(f)
+    else:
+        all_partners = {}
+    return all_partners
 
 def google_sheet_to_dict():
     """
@@ -15,17 +26,15 @@ def google_sheet_to_dict():
     """
     chosen_size_dict = {}
 
-    # Find last time meetings happend
-    if os.path.exists(all_groups_csv):
-        filter_value = pd.to_datetime(pd.read_csv(all_groups_csv, usecols=["creation_time"])["creation_time"], format=time_format).max()
-    else:
-        filter_value = pd.Timestamp("2000-01-01 00:00:00")
+    # initializes filter value
+    if not "filter_value" in all_partners:
+        all_partners["filter_value"] = pd.Timestamp("2000-01-01 00:00:00")
     
     # creates and cleans DataFrame, remove duplicates and make column names easier
     df = pd.read_csv("https://docs.google.com/spreadsheets/d/15pMlh8APUGehoKDdlcW-B_BQHElrQbRLL63hRNFInEc/export?format=csv")
     df = df.rename(columns = {"Timestamp": "timestamp", "Full Name": "name", "Email": "email", "How many people do you want in your meeting group?": "group_size"})
     df["timestamp"] = pd.to_datetime(df["timestamp"]).dt.round("min")
-    df = df[df["timestamp"] > filter_value].drop_duplicates().groupby(by="group_size")
+    df = df[df["timestamp"] > all_partners["filter_value"]].drop_duplicates().groupby(by="group_size")
 
     # turns DataFrame into dictionary
     for group_size, data in df:
@@ -42,20 +51,30 @@ def make_groups(chosen_size_dict):
         chosen_size_list.append(chosen_size_dict[key])
     return chosen_size_list
 
-def build_all_groups_csv(chosen_size_list):
+def build_all_groups_json(chosen_size_list, all_partners):
     """
-    takes the made groups and adds them to the CSV with all groups ever made
+    takes the made groups and adds them to the dictionary to see who has been in a group with who
     """
-    now = datetime.datetime.now().strftime(time_format)
-    df = pd.DataFrame({"creation_time": [now]*len(chosen_size_list), "groups": chosen_size_list})
-    if os.path.exists(all_groups_csv):
-        df.to_csv(all_groups_csv, mode="a", header=False, index=False)
-    else:
-        df.to_csv(all_groups_csv, mode="w", header=True, index=False)
+    all_partners["filter_value"] = datetime.datetime.now().strftime(time_format)
+    for group in chosen_size_list:
+        for person in group:
+            others = []
+
+            for people in group:
+                if people[0] != person[0]:
+                    others.append(people[0])
+            
+            if person[0] not in all_partners:
+                all_partners[person[0]] = []
+
+            all_partners[person[0]] = list(set(all_partners[person[0]] + others))
     
+    with open(all_groups_json, "w") as f:
+        json.dump(all_partners, f)
 
 if __name__ == "__main__":
+    all_partners = load_all_partners()
     chosen_size_dict = google_sheet_to_dict()
     chosen_size_list = make_groups(chosen_size_dict)
-    res = build_all_groups_csv(chosen_size_list)
-    print(res)
+    build_all_groups_json(chosen_size_list, all_partners)
+
