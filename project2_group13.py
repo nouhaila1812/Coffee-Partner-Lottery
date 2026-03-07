@@ -1,7 +1,9 @@
 import pandas as pd
 import datetime
 import os
-
+"""
+The link to the google form is https://forms.gle/NRS5GVcTEuB94Zuz7
+"""
 all_groups_csv = "all_coffee_partners.csv"
 time_format = "%Y-%m-%d %H:%M:%S"
 
