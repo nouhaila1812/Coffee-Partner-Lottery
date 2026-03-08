@@ -101,16 +101,22 @@ def build_all_past_partners_json(new_groups, all_past_partners):
     with open(all_met_people_dict, "w") as f:
         json.dump(all_past_partners, f)
 
-if __name__ == "__main__":
+def main():
     all_past_partners = load_all_partners()
 
-    if input("Would you like to use participant entries from a certain timeframe (y/n)? ") == "y":
-        earliest_date = input("What is the earliest signup date you want to use data from (format: YYYY-MM-DD)? ")
-        latest_date = input("What is the latest signup date you want to use data from (format: YYYY-MM-DD)? ")
-        time_frame = [pd.Timestamp(earliest_date), pd.Timestamp(latest_date) + datetime.timedelta(days=1)]
-    else:
-        time_frame = [pd.Timestamp("2000-01-01"), pd.Timestamp("2100-01-01")]
-    
+    while True:
+        use_timeframe = input("Would you like to use participant entries from a certain timeframe (y/n)? ")
+        if use_timeframe == "y":
+            earliest_date = input("What is the earliest signup date you want to use data from (format: YYYY-MM-DD)? ")
+            latest_date = input("What is the latest signup date you want to use data from (format: YYYY-MM-DD)? ")
+            time_frame = [pd.Timestamp(earliest_date), pd.Timestamp(latest_date) + datetime.timedelta(days=1)]
+            break
+        elif use_timeframe == "n":
+            time_frame = [pd.Timestamp("2000-01-01"), pd.Timestamp("2100-01-01")]
+            break
+        else:
+            print("Invalid input, please try again")
+        
     eligible_people = google_sheet_to_dict(time_frame)
 
     while True:
@@ -122,10 +128,12 @@ if __name__ == "__main__":
         else:
             break
     new_groups = make_groups({str(group_size): eligible_people}, all_past_partners)
-    print(new_groups)
+
     build_all_past_partners_json(new_groups, all_past_partners)
 
 
+if __name__ == "__main__":
+    main()
 # Test timeframe
 # 2025-03-09
 # 2025-03-14
