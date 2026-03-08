@@ -45,15 +45,47 @@ def google_sheet_to_dict():
         chosen_size_dict[str(group_size)] = list(zip(list(data["email"]), list(data["name"])))
     return(chosen_size_dict) # The dictionaries structure is chosen_size_dict[desired group size] = [(personA email, personA name), (personB email, personB name)]
 
-def make_groups(chosen_size_dict):
-    """
-    needs to be built, please return the groups in format [[personA, personB, personC], [personD, personE]]
-    each sublist being a group. 
-    """
-    chosen_size_list = []
-    for key in chosen_size_dict:
-        chosen_size_list.append(chosen_size_dict[key])
-    return chosen_size_list
+def make_groups(chosen_size_dict, all_partners):
+
+    groups = []
+
+    # goes through each requested group size
+    for size in chosen_size_dict:
+
+        people = chosen_size_dict[size]
+        size = int(size)
+
+        i = 0
+
+        # creates groups until all people in this size category are processed
+        while i < len(people):
+
+            group = []
+            j = 0
+
+            # fills one group up to the requested size
+            while j < size and i < len(people):
+                person = people[i]
+                group.append(person)
+                i = i + 1
+                j = j + 1
+
+            # if the group is full, adds it directly
+            if len(group) == size:
+                groups.append(group)
+
+            # if there are leftover people, adds them to existing groups
+            else:
+                if len(groups) > 0:
+                    k = 0
+                    while k < len(group):
+                        groups[k % len(groups)].append(group[k])
+                        k = k + 1
+                else:
+                    groups.append(group)
+
+    return groups
+
 
 def build_all_groups_json(chosen_size_list, all_partners):
     """
