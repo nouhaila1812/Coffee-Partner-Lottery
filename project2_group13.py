@@ -22,29 +22,21 @@ def load_all_partners():
         all_past_partners = {}
     return all_past_partners
 
-def google_sheet_to_dict():
+def google_sheet_to_dict(time_frame):
     """
     Google form is linked to a google sheet which can be read by pandas csv reader.
-    The titles are cleaned for easy typing, times are rounded to nearest minute and duplicates are dropped. Dataframe is grouped by the amount of people they want to be in a group with.
-    Returns dictionary whos keys are desired group sizes, and values are lists of corresponding emails that want that group size.
+    The titles are cleaned for easy typing, times are rounded to nearest minute and duplicates are dropped. 
+    Returns list of current participants emails.
     """
-    chosen_size_dict = {}
-
-    # initializes filter value
-    if not "filter_value" in all_past_partners:
-        all_past_partners["filter_value"] = pd.Timestamp("2000-01-01 00:00:00")
     
     # creates and cleans DataFrame, remove duplicates and make column names easier
     df = pd.read_csv("https://docs.google.com/spreadsheets/d/15pMlh8APUGehoKDdlcW-B_BQHElrQbRLL63hRNFInEc/export?format=csv")
-    df = df.rename(columns = {"Timestamp": "timestamp", "Full Name": "name", "Email": "email", "How many people do you want in your meeting group?": "group_size"})
-    df["timestamp"] = pd.to_datetime(df["timestamp"]).dt.round("min")
-    df = df[df["timestamp"] > all_past_partners["filter_value"]].drop_duplicates().groupby(by="group_size")
+    df["Timestamp"] = pd.to_datetime(df["Timestamp"]).dt.round("min")
+    df = df[(df["Timestamp"] <= time_frame[1]) & (df["Timestamp"] >= time_frame[0])].drop_duplicates()
 
-    # turns DataFrame into dictionary
-    for group_size, data in df:
-        chosen_size_dict[str(group_size)] = list(zip(list(data["email"]), list(data["name"])))
-    return(chosen_size_dict) # The dictionaries structure is chosen_size_dict[desired group size] = [(personA email, personA name), (personB email, personB name)]
-
+    # turns DataFrame into list of emails
+    return list(zip(list(df["Email"]), list(df["Full Name"])))
+    
 def make_groups(chosen_size_dict, all_past_partners):
 
     groups = []
@@ -91,8 +83,9 @@ def build_all_past_partners_json(new_groups, all_past_partners):
     """
     takes the made groups and adds them to the dictionary to see who has been in a group with who
     """
-    all_past_partners["filter_value"] = datetime.datetime.now().strftime(time_format)
+
     for group in new_groups:
+        
         for person in group:
             others = []
 
@@ -110,11 +103,31 @@ def build_all_past_partners_json(new_groups, all_past_partners):
 
 if __name__ == "__main__":
     all_past_partners = load_all_partners()
-    chosen_size_dict = google_sheet_to_dict()
-    new_groups = make_groups(chosen_size_dict, all_past_partners)
+
+    if input("Would you like to use participant entries from a certain timeframe (y/n)? ") == "y":
+        earliest_date = input("What is the earliest signup date you want to use data from (format: YYYY-MM-DD)? ")
+        latest_date = input("What is the latest signup date you want to use data from (format: YYYY-MM-DD)? ")
+        time_frame = [pd.Timestamp(earliest_date), pd.Timestamp(latest_date) + datetime.timedelta(days=1)]
+    else:
+        time_frame = [pd.Timestamp("2000-01-01"), pd.Timestamp("2100-01-01")]
+    
+    eligible_people = google_sheet_to_dict(time_frame)
+
+    while True:
+        group_size = int(input(f"There are {len(eligible_people)} people signed up. How many people should be in each group? "))
+        if group_size > len(eligible_people):
+            print("Group size must be less than, or equal to, the number of signed up participants.")
+        elif group_size < 2:
+            print("Groups must be comprised of 2 or more people")
+        else:
+            break
+    new_groups = make_groups({str(group_size): eligible_people}, all_past_partners)
+    print(new_groups)
     build_all_past_partners_json(new_groups, all_past_partners)
 
-    print("Groups created successfully:")
-    for group in new_groups:
-        print(group)
+
+# Test timeframe
+# 2025-03-09
+# 2025-03-14
+    
 
