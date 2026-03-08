@@ -5,22 +5,22 @@ import json
 """
 The link to the google form is https://forms.gle/NRS5GVcTEuB94Zuz7
 """
-all_groups_json = "all_coffee_partners.json"
+all_met_people_dict = "all_coffee_partners.json"
 time_format = "%Y-%m-%d %H:%M:%S"
 
 def load_all_partners():
     """
-    The all_partners dictionary is stored in a json file, it contains an entry for each participant
+    The all_past_partners dictionary is stored in a json file, it contains an entry for each participant
     the participants email is their key, and the peoples emails theyve been grouped with before are
     the values (in a list). This dictionary also saves the last time groups were created so we know
     which entries are new and which are old.
     """
-    if os.path.exists(all_groups_json):
-        with open(all_groups_json) as f:
-            all_partners = json.load(f)
+    if os.path.exists(all_met_people_dict):
+        with open(all_met_people_dict) as f:
+            all_past_partners = json.load(f)
     else:
-        all_partners = {}
-    return all_partners
+        all_past_partners = {}
+    return all_past_partners
 
 def google_sheet_to_dict():
     """
@@ -31,21 +31,21 @@ def google_sheet_to_dict():
     chosen_size_dict = {}
 
     # initializes filter value
-    if not "filter_value" in all_partners:
-        all_partners["filter_value"] = pd.Timestamp("2000-01-01 00:00:00")
+    if not "filter_value" in all_past_partners:
+        all_past_partners["filter_value"] = pd.Timestamp("2000-01-01 00:00:00")
     
     # creates and cleans DataFrame, remove duplicates and make column names easier
     df = pd.read_csv("https://docs.google.com/spreadsheets/d/15pMlh8APUGehoKDdlcW-B_BQHElrQbRLL63hRNFInEc/export?format=csv")
     df = df.rename(columns = {"Timestamp": "timestamp", "Full Name": "name", "Email": "email", "How many people do you want in your meeting group?": "group_size"})
     df["timestamp"] = pd.to_datetime(df["timestamp"]).dt.round("min")
-    df = df[df["timestamp"] > all_partners["filter_value"]].drop_duplicates().groupby(by="group_size")
+    df = df[df["timestamp"] > all_past_partners["filter_value"]].drop_duplicates().groupby(by="group_size")
 
     # turns DataFrame into dictionary
     for group_size, data in df:
         chosen_size_dict[str(group_size)] = list(zip(list(data["email"]), list(data["name"])))
     return(chosen_size_dict) # The dictionaries structure is chosen_size_dict[desired group size] = [(personA email, personA name), (personB email, personB name)]
 
-def make_groups(chosen_size_dict, all_partners):
+def make_groups(chosen_size_dict, all_past_partners):
 
     groups = []
 
@@ -87,12 +87,12 @@ def make_groups(chosen_size_dict, all_partners):
     return groups
 
 
-def build_all_groups_json(chosen_size_list, all_partners):
+def build_all_past_partners_json(new_groups, all_past_partners):
     """
     takes the made groups and adds them to the dictionary to see who has been in a group with who
     """
-    all_partners["filter_value"] = datetime.datetime.now().strftime(time_format)
-    for group in chosen_size_list:
+    all_past_partners["filter_value"] = datetime.datetime.now().strftime(time_format)
+    for group in new_groups:
         for person in group:
             others = []
 
@@ -100,17 +100,21 @@ def build_all_groups_json(chosen_size_list, all_partners):
                 if people[0] != person[0]:
                     others.append(people[0])
             
-            if person[0] not in all_partners:
-                all_partners[person[0]] = []
+            if person[0] not in all_past_partners:
+                all_past_partners[person[0]] = []
 
-            all_partners[person[0]] = list(set(all_partners[person[0]] + others))
+            all_past_partners[person[0]] = list(set(all_past_partners[person[0]] + others))
     
-    with open(all_groups_json, "w") as f:
-        json.dump(all_partners, f)
+    with open(all_met_people_dict, "w") as f:
+        json.dump(all_past_partners, f)
 
 if __name__ == "__main__":
-    all_partners = load_all_partners()
+    all_past_partners = load_all_partners()
     chosen_size_dict = google_sheet_to_dict()
-    chosen_size_list = make_groups(chosen_size_dict, all_partners)
-    build_all_groups_json(chosen_size_list, all_partners)
+    new_groups = make_groups(chosen_size_dict, all_past_partners)
+    build_all_past_partners_json(new_groups, all_past_partners)
+
+    print("Groups created successfully:")
+    for group in new_groups:
+        print(group)
 
