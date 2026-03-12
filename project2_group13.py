@@ -109,8 +109,13 @@ def main():
         if use_timeframe == "y":
             earliest_date = input("What is the earliest signup date you want to use data from (format: YYYY-MM-DD)? ")
             latest_date = input("What is the latest signup date you want to use data from (format: YYYY-MM-DD)? ")
-            time_frame = [pd.Timestamp(earliest_date), pd.Timestamp(latest_date) + datetime.timedelta(days=1)]
-            break
+            try:
+                time_frame = [pd.Timestamp(earliest_date), pd.Timestamp(latest_date) + datetime.timedelta(days=1)]
+                break
+            except Exception as e:
+                print(f"There was an error with your chosen timeframe: {e}")
+                print("Please try again")
+                continue
         elif use_timeframe == "n":
             time_frame = [pd.Timestamp("2000-01-01"), pd.Timestamp("2100-01-01")]
             break
@@ -118,7 +123,10 @@ def main():
             print("Invalid input, please try again")
         
     eligible_people = google_sheet_to_dict(time_frame)
-
+    if len(eligible_people) < 2:
+        print("Fewer than 2 people signed up in this timeframe, sadly no groups can be formed.")
+        return None
+    
     while True:
         group_size = int(input(f"There are {len(eligible_people)} people signed up. How many people should be in each group? "))
         if group_size > len(eligible_people):
