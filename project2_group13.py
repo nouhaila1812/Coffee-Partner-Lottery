@@ -129,7 +129,8 @@ Enjoy your coffee date!"""
 def main():
     print(f"-------------------------------\nWelcome to Coffee Dates\n-------------------------------")
     print("To access the signup form, please follow this link: https://forms.gle/NRS5GVcTEuB94Zuz7")
-    print("Signed up participants are stored in a google sheet that gets read automatically by this program, so no need to download any files")
+    print("Signed up participants are stored in a google sheet that gets read automatically by this program.")
+    print("Just make sure the conversation_starters.txt file is in the same directory you run this program from.")
     while True:
         use_timeframe = input("Would you like to use participant entries from a certain timeframe (y/n)? ")
         if use_timeframe == "y":
