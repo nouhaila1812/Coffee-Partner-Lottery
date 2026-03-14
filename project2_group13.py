@@ -2,6 +2,8 @@ import pandas as pd
 import datetime
 import os
 import json
+import random
+
 """
 The link to the google form is https://forms.gle/NRS5GVcTEuB94Zuz7
 """
@@ -34,10 +36,12 @@ def google_sheet_to_dict(time_frame):
     df["Timestamp"] = pd.to_datetime(df["Timestamp"]).dt.round("min")
     df = df[(df["Timestamp"] <= time_frame[1]) & (df["Timestamp"] >= time_frame[0])].drop_duplicates()
 
-    # turns DataFrame into list of emails
+    # turns DataFrame into list of emails and names
     return list(zip(list(df["Email"]), list(df["Full Name"])))
     
 def make_groups(chosen_size_dict, all_past_partners):
+     # It would be nice if we considered making groups that minimize repeat meeting
+     # Also we need to make the group assignment random which means somehow using the random module
 
     groups = []
 
@@ -101,6 +105,10 @@ def build_all_past_partners_json(new_groups, all_past_partners):
     with open(all_met_people_dict, "w") as f:
         json.dump(all_past_partners, f)
 
+def create_messages(new_groups):
+    pass
+
+
 def main():
     all_past_partners = load_all_partners()
 
@@ -117,6 +125,7 @@ def main():
                 print("Please try again")
                 continue
         elif use_timeframe == "n":
+            print("Using all signups")
             time_frame = [pd.Timestamp("2000-01-01"), pd.Timestamp("2100-01-01")]
             break
         else:
