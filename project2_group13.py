@@ -108,14 +108,14 @@ def create_messages(groups):
 
         message = f"""Hello {names_text},
 
-You have been matched for Mystery Coffee!
+You have been matched for Coffee Dates!
 
 Your group members are: {names_text}
 
 Conversation starter:
 {starter}
 
-Enjoy your coffee meeting!"""
+Enjoy your coffee date!"""
 
         print(message)
         print("-------------------------------")
