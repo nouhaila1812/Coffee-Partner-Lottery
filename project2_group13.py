@@ -49,6 +49,7 @@ def make_groups(chosen_size_dict, all_past_partners):
     for size in chosen_size_dict:
 
         people = chosen_size_dict[size]
+        random.shuffle(people)
         size = int(size)
 
         i = 0
