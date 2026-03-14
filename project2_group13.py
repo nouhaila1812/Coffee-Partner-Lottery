@@ -7,22 +7,8 @@ import random
 """
 The link to the google form is https://forms.gle/NRS5GVcTEuB94Zuz7
 """
-all_met_people_dict = "all_coffee_partners.json"
-time_format = "%Y-%m-%d %H:%M:%S"
 
-def load_all_partners():
-    """
-    The all_past_partners dictionary is stored in a json file, it contains an entry for each participant
-    the participants email is their key, and the peoples emails theyve been grouped with before are
-    the values (in a list). This dictionary also saves the last time groups were created so we know
-    which entries are new and which are old.
-    """
-    if os.path.exists(all_met_people_dict):
-        with open(all_met_people_dict) as f:
-            all_past_partners = json.load(f)
-    else:
-        all_past_partners = {}
-    return all_past_partners
+time_format = "%Y-%m-%d %H:%M:%S"
 
 def google_sheet_to_dict(time_frame):
     """
@@ -39,7 +25,7 @@ def google_sheet_to_dict(time_frame):
     # turns DataFrame into list of emails and names
     return list(zip(list(df["Email"]), list(df["Full Name"])))
     
-def make_groups(chosen_size_dict, all_past_partners):
+def make_groups(chosen_size_dict):
      # It would be nice if we considered making groups that minimize repeat meeting
      # Also we need to make the group assignment random which means somehow using the random module
 
@@ -83,28 +69,6 @@ def make_groups(chosen_size_dict, all_past_partners):
 
     return groups
 
-
-def build_all_past_partners_json(new_groups, all_past_partners):
-    """
-    takes the made groups and adds them to the dictionary to see who has been in a group with who
-    """
-
-    for group in new_groups:
-        
-        for person in group:
-            others = []
-
-            for people in group:
-                if people[0] != person[0]:
-                    others.append(people[0])
-            
-            if person[0] not in all_past_partners:
-                all_past_partners[person[0]] = []
-
-            all_past_partners[person[0]] = list(set(all_past_partners[person[0]] + others))
-    
-    with open(all_met_people_dict, "w") as f:
-        json.dump(all_past_partners, f)
 
 def conversation_starter():
 
@@ -165,8 +129,6 @@ Enjoy your coffee meeting!"""
         group_number += 1
 
 def main():
-    all_past_partners = load_all_partners()
-
     while True:
         use_timeframe = input("Would you like to use participant entries from a certain timeframe (y/n)? ")
         if use_timeframe == "y":
@@ -199,9 +161,8 @@ def main():
             print("Groups must be comprised of 2 or more people")
         else:
             break
-    new_groups = make_groups({str(group_size): eligible_people}, all_past_partners)
+    new_groups = make_groups({str(group_size): eligible_people})
 
-    build_all_past_partners_json(new_groups, all_past_partners)
     create_messages(new_groups)
 
 if __name__ == "__main__":
