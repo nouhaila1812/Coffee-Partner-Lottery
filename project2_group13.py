@@ -150,7 +150,7 @@ def main():
     build_all_past_partners_json(new_groups, all_past_partners)
     create_messages(new_groups)
 
-def get_conversation_starter():
+def conversation_starter():
 
     file = open("conversation_starters.txt", "r")
 
@@ -166,7 +166,7 @@ def get_conversation_starter():
 
 def create_messages(groups):
     # Get a conversation starter
-    starter = get_conversation_starter()
+    starter = conversation_starter()
     
     print("Conversation starter for this round:")
     print(starter)
