@@ -148,10 +148,67 @@ def main():
     new_groups = make_groups({str(group_size): eligible_people}, all_past_partners)
 
     build_all_past_partners_json(new_groups, all_past_partners)
+    create_messages(new_groups)
+
+def get_conversation_starter():
+
+    file = open("conversation_starters.txt", "r")
+
+    starters = file.readlines()
+
+    file.close()
+
+    starter = random.choice(starters)
+
+    starter = starter.strip()
+
+    return starter
+
+def create_messages(groups):
+    # Get a conversation starter
+    starter = get_conversation_starter()
+    
+    print("Conversation starter for this round:")
+    print(starter)
+    print("\n")
+
+    group_number = 1
+        
+    # Build the text with the names
+    for group in groups:
+        names_text = ""
+
+        for person in group:
+            name = person[1]
+
+            if names_text == "":
+                names_text = name
+            else:
+                names_text = names_text + ", " + name
+
+        message = f"""Hello {names_text},
+
+You have been matched for Mystery Coffee!
+
+Your group members are: {names_text}
+
+Conversation starter:
+{starter}
+
+Enjoy your coffee meeting!"""
+
+        print(message)
+        print("-------------------------------")
+
+        # Save the message in a text file
+        filename = f"group_{group_number}_message.txt"
+        with open(filename, "w") as file:
+            file.write(message)
+
+        # Increase the group number
+        group_number += 1
 
 
-if __name__ == "__main__":
-    main()
 # Test timeframe
 # 2025-03-09
 # 2025-03-14
