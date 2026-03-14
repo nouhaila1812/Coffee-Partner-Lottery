@@ -106,50 +106,6 @@ def build_all_past_partners_json(new_groups, all_past_partners):
     with open(all_met_people_dict, "w") as f:
         json.dump(all_past_partners, f)
 
-def create_messages(new_groups):
-    pass
-
-
-def main():
-    all_past_partners = load_all_partners()
-
-    while True:
-        use_timeframe = input("Would you like to use participant entries from a certain timeframe (y/n)? ")
-        if use_timeframe == "y":
-            earliest_date = input("What is the earliest signup date you want to use data from (format: YYYY-MM-DD)? ")
-            latest_date = input("What is the latest signup date you want to use data from (format: YYYY-MM-DD)? ")
-            try:
-                time_frame = [pd.Timestamp(earliest_date), pd.Timestamp(latest_date) + datetime.timedelta(days=1)]
-                break
-            except Exception as e:
-                print(f"There was an error with your chosen timeframe: {e}")
-                print("Please try again")
-                continue
-        elif use_timeframe == "n":
-            print("Using all signups")
-            time_frame = [pd.Timestamp("2000-01-01"), pd.Timestamp("2100-01-01")]
-            break
-        else:
-            print("Invalid input, please try again")
-        
-    eligible_people = google_sheet_to_dict(time_frame)
-    if len(eligible_people) < 2:
-        print("Fewer than 2 people signed up in this timeframe, sadly no groups can be formed.")
-        return None
-    
-    while True:
-        group_size = int(input(f"There are {len(eligible_people)} people signed up. How many people should be in each group? "))
-        if group_size > len(eligible_people):
-            print("Group size must be less than, or equal to, the number of signed up participants.")
-        elif group_size < 2:
-            print("Groups must be comprised of 2 or more people")
-        else:
-            break
-    new_groups = make_groups({str(group_size): eligible_people}, all_past_partners)
-
-    build_all_past_partners_json(new_groups, all_past_partners)
-    create_messages(new_groups)
-
 def conversation_starter():
 
     file = open("conversation_starters.txt", "r")
@@ -207,6 +163,49 @@ Enjoy your coffee meeting!"""
 
         # Increase the group number
         group_number += 1
+
+def main():
+    all_past_partners = load_all_partners()
+
+    while True:
+        use_timeframe = input("Would you like to use participant entries from a certain timeframe (y/n)? ")
+        if use_timeframe == "y":
+            earliest_date = input("What is the earliest signup date you want to use data from (format: YYYY-MM-DD)? ")
+            latest_date = input("What is the latest signup date you want to use data from (format: YYYY-MM-DD)? ")
+            try:
+                time_frame = [pd.Timestamp(earliest_date), pd.Timestamp(latest_date) + datetime.timedelta(days=1)]
+                break
+            except Exception as e:
+                print(f"There was an error with your chosen timeframe: {e}")
+                print("Please try again")
+                continue
+        elif use_timeframe == "n":
+            print("Using all signups")
+            time_frame = [pd.Timestamp("2000-01-01"), pd.Timestamp("2100-01-01")]
+            break
+        else:
+            print("Invalid input, please try again")
+        
+    eligible_people = google_sheet_to_dict(time_frame)
+    if len(eligible_people) < 2:
+        print("Fewer than 2 people signed up in this timeframe, sadly no groups can be formed.")
+        return None
+    
+    while True:
+        group_size = int(input(f"There are {len(eligible_people)} people signed up. How many people should be in each group? "))
+        if group_size > len(eligible_people):
+            print("Group size must be less than, or equal to, the number of signed up participants.")
+        elif group_size < 2:
+            print("Groups must be comprised of 2 or more people")
+        else:
+            break
+    new_groups = make_groups({str(group_size): eligible_people}, all_past_partners)
+
+    build_all_past_partners_json(new_groups, all_past_partners)
+    create_messages(new_groups)
+
+if __name__ == "__main__":
+    main()
 
 
 # Test timeframe
